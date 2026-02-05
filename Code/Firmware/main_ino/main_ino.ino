@@ -8,24 +8,24 @@ int COLUMNS[] = { 7, 6, 5, 4, 3, 2 };
 
 void setup() {
   for (int i : ROWS){
-    pinMode(i, INPUT_PULLUP);
-  }
-  for (int i : COLUMNS){
     pinMode(i, OUTPUT);
     digitalWrite(i, HIGH);
 
+  }
+  for (int i : COLUMNS){
+    pinMode(i, INPUT_PULLUP);
   }
   Serial.begin(9600);
 }
 void loop() {
 
-  for (int i : COLUMNS){
+  for (int i : ROWS){
     digitalWrite(i, LOW);
     delayMicroseconds(5);
 
-    for (int j : ROWS){
+    for (int j : COLUMNS){
       if (digitalRead(j) == LOW){
-        Serial.println(String("Column:") + i + " Row:" + j);
+        Serial.println(String("Column:") + j + " Row:" + i);
       }
     }
 
