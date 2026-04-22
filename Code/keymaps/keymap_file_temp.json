@@ -1,0 +1,38 @@
+# I like the yaml approach because it is simple and clean.
+# Also allows as many keymaps as you want.
+{
+  "keymap-main": {
+  "col0": {
+    "row0": "keycode",
+    "row1": "keycode",
+    "row2": "keycode"
+  },
+  "col1": {
+    "row0": "keycode",
+    "row1": "keycode",
+    "row2": "keycode"
+  },
+  "col2": {
+    "row0": "keycode",
+    "row1": "keycode",
+    "row2": "keycode"
+  }
+  },
+  "keymap-layer": {
+  "col0": {
+    "row0": "keycode",
+    "row1": "keycode",
+    "row2": "keycode"
+  },
+  "col1": {
+    "row0": "keycode",
+    "row1": "keycode",
+    "row2": "keycode"
+  },
+  "col2": {
+    "row0": "keycode",
+    "row1": "keycode",
+    "row2": "keycode"
+  }
+  }
+}
