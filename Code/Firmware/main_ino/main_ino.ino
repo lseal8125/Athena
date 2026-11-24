@@ -3,14 +3,10 @@
 #include "PluggableUSBHID.h"
 #include "USBKeyboard.h"
 #include "USBHID.h"
+#include <ArduinoBLE.h>
 
-USBHID HID;
-
-USBKeyboard Keyboard;
-/*
-  pins 11-15: rows
-  pins 5-10: colums
-*/
+const char* serviceUuid = "19B10000-E8F2-537E-4F6C-D104768A1214";
+const char* charUuid    = "19B10001-E8F2-537E-4F6C-D104768A1214";
 
 int ROWS[] = { 12, 11, 10, 9, 8 };
 int COLUMNS[] = { 7, 6, 5, 4, 3, 2 };
@@ -26,30 +22,77 @@ void setup() {
     pinMode(i, INPUT_PULLUP);
   }
   Serial.begin(9600);
+
+  if (!BLE.begin()) {
+    Serial.println("Starting BLE failed!");
+    while (1);
+  }
+
+  Serial.println("Central ready. Scanning for Peripheral...");
+  BLE.scanForUuid(serviceUuid);
 }
 void loop() {
+  BLEDevice peripheral = BLE.available();
 
-  int lastUsed[2];
-  int count = 0;
+  if (peripheral) {
+    Serial.print("Found ");
+    Serial.print(peripheral.address());
+    Serial.print(" '");
+    Serial.print(peripheral.localName());
+    Serial.println("'");
 
+    BLE.stopScan();
+
+    monitorPeripheral(peripheral);
+
+    Serial.println("Peripheral disconnected. Resuming scan...");
+    BLE.scanForUuid(serviceUuid);
+  }
+}
+void monitorPeripheral(BLEDevice peripheral) {
+  if (!peripheral.connect()) {
+    Serial.println("Failed to connect!");
+    return;
+  }
+
+  if (!peripheral.discoverAttributes()) {
+    Serial.println("Attribute discovery failed!");
+    peripheral.disconnect();
+    return;
+  }
+
+  BLECharacteristic dataChar = peripheral.characteristic(charUuid);
+
+  if (!dataChar) {
+    Serial.println("Characteristic not found!");
+    peripheral.disconnect();
+    return;
+  }
+
+  // Subscribe to receive automatic updates whenever the Peripheral writes a new value
+  if (dataChar.canSubscribe()) {
+    dataChar.subscribe();
+  }
+
+  while (peripheral.connected()) {
+    if (dataChar.valueUpdated()) {
+      int receivedValue = 0;
+      dataChar.readValue(receivedValue);
+
+      Serial.print("Received value: ");
+      Serial.println(receivedValue);
+    }
+  }
+}
+
+void Keypressed(){
   for (int row : ROWS){
     digitalWrite(row, LOW);
     delayMicroseconds(5);
 
     for (int col : COLUMNS){
       if (digitalRead(col) == LOW){
-        int current[2] = {col, row};
-        if (lastUsed == current) {
-          if (count == 1) { delay(100); }
-          delay(30);
-          count++;
-          if (count > 5) { count = 0; }
-        }
         Serial.println(String("Column:") + col + " Row:" + row);
-        lastUsed[0] = current[0];
-        lastUsed[1] = current[1];
-        SendKeyCode(col, row);
-
       }
     }
 
@@ -97,7 +140,7 @@ void SendKeyCode(int col, int row) {
     
     // Serial.println("Sent Shift+A and released.");
 
-    HID_REPORT report;
+    /*HID_REPORT report;
     report.length = 8;
 
     memset(report.data, 0, 8);
@@ -117,7 +160,7 @@ void SendKeyCode(int col, int row) {
     // Send the "Released" state (All zeros)
     HID.send(&report);
 
-    Serial.println("HID Report Sent: Shift + A");
+    Serial.println("HID Report Sent: Shift + A");*/
 
   }
   
